@@ -198,8 +198,8 @@ void InstallLights(const glm::mat4& vMat)
 
 int main(/*int argc, char** argv*/)
 {
-	int argc = 4;
-	const char* argv[] = { "Path", "Models/Suzanne.obj", "Models/test_model2.obj", "Models/Cone.obj" };
+	int argc = 5;
+	const char* argv[] = { "Path", "Models/Suzanne.obj", "Models/test_model2.obj", "Models/Cone.obj", "Models/transparent_vault.obj" };
 	if (argc == 1)
 	{	
 		printf("No model was specified.\nTo specify a model provide the path to the model (with the .obj extension) in the command line arguments.\nQuitting!! :-(");
@@ -287,4 +287,13 @@ void ProcessInput(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		ChangeCurrentModelIndex(Input::RIGHT);
 	}
+	if (key == GLFW_KEY_UP && action == GLFW_REPEAT)
+	{
+		torusLocZ += 0.5f;
+	}
+	if (key == GLFW_KEY_DOWN && action == GLFW_REPEAT)
+	{
+		torusLocZ -= 0.5f;
+	}
+
 }
