@@ -16,8 +16,10 @@
 #include "Torus.h"
 #include "ImportedModel.h"
 
+
 #define numVAOs 1
 #define numVBOs 3
+
 
 float cameraX, cameraY, cameraZ;
 float cubeLocX, cubeLocY, cubeLocZ;
@@ -33,7 +35,8 @@ GLuint mvLoc, projLoc, nLoc;
 int width, height;
 float aspect;
 
-ImportedModel model("Models/Suzanne.obj");
+std::vector<ImportedModel> models;
+ImportedModel* model = 0; unsigned int currentModelIndex = 0;	//Stores the current model
 Torus myTorus(0.5f, 0.2f, 48);
 
 //Some initilizations to test the lighting (Gouraud)
@@ -55,9 +58,17 @@ float* matDif = Utils::silverDiffuse();
 float* matSpe = Utils::silverSpecular();
 float matShi = Utils::silverShininess();
 
+enum class Input
+{
+	LEFT, RIGHT
+};
+
+void ProcessInput(GLFWwindow*, int, int, int, int);
+void ChangeCurrentModelIndex(Input ip);
+
 void InstallLights(const glm::mat4& vMat);
 
-void setupVertices(void) 
+void setupVertices(ImportedModel& model) 
 {
 	std::vector<glm::vec3> vert = model.getVertices();
 	std::vector<glm::vec2> tex = model.getTextureCoords();
@@ -95,7 +106,7 @@ void init(GLFWwindow* window)
 	renderingProgram = Utils::CreateShaderProgram();
 	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 5.0f;
 	torusLocX = 0.0f; torusLocY = 0.0f; torusLocZ = 0.0f;
-	setupVertices();
+	setupVertices(models[currentModelIndex]);
 }
 
 void Display(GLFWwindow* window, double currentTime)
@@ -150,7 +161,7 @@ void Display(GLFWwindow* window, double currentTime)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glDrawArrays(GL_TRIANGLES, 0, model.getNumVertices());
+	glDrawArrays(GL_TRIANGLES, 0, model->getNumVertices());
 }
 
 
@@ -185,8 +196,16 @@ void InstallLights(const glm::mat4& vMat)
 	glProgramUniform1f(renderingProgram, mShiLoc, matShi);
 }
 
-int main()
+int main(/*int argc, char** argv*/)
 {
+	int argc = 4;
+	const char* argv[] = { "Path", "Models/Suzanne.obj", "Models/test_model2.obj", "Models/Cone.obj" };
+	if (argc == 1)
+	{	
+		printf("No model was specified.\nTo specify a model provide the path to the model (with the .obj extension) in the command line arguments.\nQuitting!! :-(");
+		exit(EXIT_FAILURE);
+	}
+
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 
@@ -205,13 +224,24 @@ int main()
 		exit(EXIT_FAILURE);
 
 	glfwSwapInterval(1);
+	
+	//Load the models in the model vec (push the model instances into the models vector)
+	for (int i = 1; i < argc; i++)
+	{
+		models.push_back(ImportedModel(argv[i]));
+	}
 
+		init(window);
 
-	init(window);
+	
 
+	model = &models[currentModelIndex];
 	//Print Statements
 	printf("Vendor Info:%s\n", glGetString(GL_VENDOR));
 	printf("Version: %s\n", glGetString(GL_VERSION));
+
+	//Set the key callback for glfw
+	glfwSetKeyCallback(window, ProcessInput);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -224,4 +254,37 @@ int main()
 	glfwTerminate();
 	exit(EXIT_SUCCESS);
 	return 0;
+}
+
+void ChangeCurrentModelIndex(Input ip)
+{
+	if (ip == Input::LEFT)
+	{
+		if (currentModelIndex != 0)
+		{
+			currentModelIndex -= 1;
+			setupVertices(model[currentModelIndex]);
+		}
+	}
+
+	if (ip == Input::RIGHT)
+	{
+		if (currentModelIndex != models.size() - 1)
+		{
+			currentModelIndex += 1;
+			setupVertices(model[currentModelIndex]);
+		}
+	}
+}
+
+void ProcessInput(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+	{
+		ChangeCurrentModelIndex(Input::LEFT);
+	}
+	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+	{
+		ChangeCurrentModelIndex(Input::RIGHT);
+	}
 }

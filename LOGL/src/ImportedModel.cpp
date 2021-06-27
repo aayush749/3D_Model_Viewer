@@ -5,7 +5,27 @@
 #include "ImportedModel.h"
 using namespace std;
 
-// ------------ Imported Model class
+ImportedModel::ImportedModel()
+{
+	//Does nothing
+}
+
+void ImportedModel::LoadModelFromOBJ(const char* filePath)
+{
+	ModelImporter modelImporter = ModelImporter();
+	modelImporter.parseOBJ(filePath); // uses modelImporter to get vertex information
+	numVertices = modelImporter.getNumVertices();
+	std::vector<float> verts = modelImporter.getVertices();
+	std::vector<float> tcs = modelImporter.getTextureCoordinates();
+	std::vector<float> normals = modelImporter.getNormals();
+	for (int i = 0; i < numVertices; i++) {
+		vertices.push_back(glm::vec3(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]));
+		texCoords.push_back(glm::vec2(tcs[i * 2], tcs[i * 2 + 1]));
+		normalVecs.push_back(glm::vec3(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]));
+	}
+}
+
+
 ImportedModel::ImportedModel(const char* filePath) {
 	ModelImporter modelImporter = ModelImporter();
 	modelImporter.parseOBJ(filePath); // uses modelImporter to get vertex information
